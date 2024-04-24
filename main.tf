@@ -38,16 +38,24 @@ resource "aws_s3_bucket_acl" "webs3" {
 resource "aws_s3_bucket_policy" "webs3_policy" {
   bucket = aws_s3_bucket.webs3.id
 
-  policy = jsonencode({
-    Version = "2012-10-17",
+   policy = jsonencode({
+    Version = "2008-10-17"
+    Id = "PolicyForCloudFrontPrivateContent"
     Statement = [
       {
-        Sid       = "PublicReadGetObject",
-        Effect    = "Allow",
-        Principal = "*",
-        Action    = ["s3:GetObject"],
-        Resource  = ["arn:aws:s3:::${aws_s3_bucket.webs3.bucket}/*"]
-      },
+        Sid = "AllowCloudFrontServicePrincipal"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Action = "s3:GetObject"
+        Resource = "arn:aws:s3:::${aws_s3_bucket.webs3.bucket}/*"
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = "${aws_cloudfront_distribution.s3_distribution.arn}"
+          }
+        }
+      }
     ]
   })
 }
